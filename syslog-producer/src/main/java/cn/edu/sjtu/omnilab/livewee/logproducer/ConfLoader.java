@@ -11,14 +11,25 @@ import java.util.Properties;
  */
 public class ConfLoader {
 
-    public final int UDPPort;
-    public final int bufSize;
-    public final String brokers;
-    public final String topic;
-    public final String serializer;
+    public int UDPPort;
+    public int bufSize;
+    public String brokers;
+    public String topic;
+    public String serializer;
 
     public ConfLoader() throws IOException {
         this(Consts.PRODUCER_CONFIG_DEFAULT);
+    }
+
+    /**
+     * A deepcopy constructor.
+     */
+    public ConfLoader(ConfLoader c){
+        UDPPort = c.UDPPort;
+        bufSize = c.bufSize;
+        brokers = c.brokers;
+        topic = c.topic;
+        serializer = c.serializer;
     }
     
     /**

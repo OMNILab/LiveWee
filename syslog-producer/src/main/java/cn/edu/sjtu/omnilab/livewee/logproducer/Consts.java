@@ -6,8 +6,7 @@ package cn.edu.sjtu.omnilab.livewee.logproducer;
 public class Consts {
 
     public final static String PRODUCER_CONFIG_DEFAULT = "conf.properties";
-    public final static String PRODUCER_CONFIG_ETLED = "conf2.properties";
-    
+
     // Configuration fields
     public final static String SYSLOG_SOURCE_PORT = "syslogproducer.uport";
     public final static String SYSLOG_BUFFER_SIZE = "syslogproducer.buffersize";

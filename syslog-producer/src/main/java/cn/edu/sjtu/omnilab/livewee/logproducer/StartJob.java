@@ -1,5 +1,6 @@
 package cn.edu.sjtu.omnilab.livewee.logproducer;
 
+import org.apache.commons.cli.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -12,20 +13,46 @@ public class StartJob {
     private static final Logger logger =
             LogManager.getLogger(StartJob.class.getName());
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException, ParseException {
 
-        // Producer for raw syslog
+        // Params for UDP port, brokers, topic
+        Options options = new Options();
+        options.addOption("h", "help", false, "print this message");
+        options.addOption("p", "port", true, "UDP port of source message");
+        options.addOption("b", "brokers", true,
+                "broker servers separated by commas");
+        options.addOption("t", "topic", true, "name of Kafka topic " +
+                "(ETLed topic is appended with 'etled' automatically)");
+
+        CommandLineParser parser = new GnuParser();
+        CommandLine cmd = parser.parse(options, args);
+
+        // Producer with default configuration
         ConfLoader conf = new ConfLoader();
         DefaultProducer producer = new DefaultProducer(conf);
         
-        // Producer for ETLed syslog
-        ConfLoader confETL = new ConfLoader(Consts.PRODUCER_CONFIG_ETLED);
+        // Update configuration with user defined values
+        if (cmd.hasOption("help")){
+            HelpFormatter formatter = new HelpFormatter();
+            formatter.printHelp( StartJob.class.getName(), options, true);
+            System.exit(-1);
+        }
+        if (cmd.hasOption("port"))
+            conf.UDPPort = Integer.parseInt(cmd.getOptionValue("port"));
+        if (cmd.hasOption("broker-list"))
+            conf.brokers = cmd.getOptionValue("broker-list");
+        if (cmd.hasOption("topic"))
+            conf.topic = cmd.getOptionValue("topic");
+
+        // Producer for ETLed messages
+        ConfLoader confETL = new ConfLoader(conf);
+        confETL.topic += ".etled";
         DefaultProducer producerETL = new DefaultProducer(confETL);
         
         logger.info("Listening UDP " + conf.UDPPort);
         logger.info("Sending messages to " + conf.brokers);
         
-        // Read syslog message from UDP socket
+        // Read messages from UDP port
         DatagramSocket socket = new DatagramSocket(conf.UDPPort);
         DatagramPacket packet = new DatagramPacket(
                 new byte[conf.bufSize], conf.bufSize);

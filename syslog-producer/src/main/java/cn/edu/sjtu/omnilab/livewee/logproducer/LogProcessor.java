@@ -27,11 +27,14 @@ public class LogProcessor {
         final int[] CODE_USRSTATUS = {522005, 522006, 522026};      // User Entry added, deleted, and user miss
         final int[] CODE_USERROAM = {500010};                       // unused
 
-        // Generic patterns to extract message fields
+        // Generic patterns to extract message fields:
+        // Datetime and year
         final String regPrefix =
-                "(?<time>\\w+\\s+\\d+\\s+(\\d{1,2}:){2}\\d{1,2}\\s+\\d{4})"; // date time and year
+                "(?<time>\\w+\\s+\\d+\\s+(\\d{1,2}:){2}\\d{1,2}\\s+\\d{4})";
+        // User MAC address
         final String regUserMac =
                 "(?<usermac>([0-9a-f]{2}:){5}[0-9a-f]{2})";
+        // WiFi AP info
         final String regApInfo =
                 "(?<apip>(\\d{1,3}\\.){3}\\d{1,3})-(?<apmac>([0-9a-f]{2}:){5}[0-9a-f]{2})-(?<apname>[\\w-]+)";
 
