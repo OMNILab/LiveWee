@@ -3,7 +3,7 @@ package cn.edu.sjtu.omnilab.livewee.test;
 import java.io.IOException;
 import java.util.Properties;
 
-import cn.edu.sjtu.omnilab.livewee.logproducer.ProducerSettings;
+import cn.edu.sjtu.omnilab.livewee.logproducer.ConfLoader;
 import kafka.javaapi.producer.Producer;
 import kafka.producer.ProducerConfig;
 import org.junit.Assert;
@@ -13,7 +13,7 @@ public class TestProducer {
 
     @Test
     public void testSettings() throws IOException {
-        ProducerSettings settings = new ProducerSettings();
+        ConfLoader settings = new ConfLoader();
         Assert.assertEquals("arubasyslog", settings.topic);
     }
 

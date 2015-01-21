@@ -15,13 +15,13 @@ public class DefaultProducer extends AbstractProducer {
     protected Producer<Integer, String> worker;
     private String topic;
 
-    public DefaultProducer(ProducerSettings settings) {
-        super(settings);
+    public DefaultProducer(ConfLoader conf) {
+        super(conf);
         Properties kafka = new Properties();
-        kafka.setProperty("metadata.broker.list", settings.brokers);
-        kafka.put("serializer.class", settings.serializer);
+        kafka.setProperty("metadata.broker.list", conf.brokers);
+        kafka.put("serializer.class", conf.serializer);
         worker = new Producer<Integer, String>(new ProducerConfig(kafka));
-        topic = settings.topic;
+        topic = conf.topic;
     }
 
     @Override

@@ -5,7 +5,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 /**
- * Created by chenxm on 1/20/15.
+ * Basic abstract producer definition.
  */
 public abstract class AbstractProducer {
     
@@ -14,7 +14,7 @@ public abstract class AbstractProducer {
 
     public AbstractProducer() {}
     
-    public AbstractProducer(ProducerSettings settings) {}
+    public AbstractProducer(ConfLoader conf) {}
 
     public abstract void sendMessage(String message);
 }
