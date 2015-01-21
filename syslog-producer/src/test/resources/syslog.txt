@@ -1,0 +1,1 @@
+<142>Jan 21 15:32:29 2015 SJTU-Local2 authmgr[2008]: <522026> <INFO> <SJTU-Local2 10.190.2.1>  MAC=54:9f:13:d2:2f:35 IP=10.186.138.145 User miss: ingress=0x10c8c, VLAN=1002 flags=0xc040

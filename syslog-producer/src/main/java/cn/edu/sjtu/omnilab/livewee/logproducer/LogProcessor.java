@@ -17,15 +17,14 @@ public class LogProcessor {
 
         // Message codes we require
         final int[] CODE_AUTHREQ = {501091, 501092, 501109};
-        final int[] CODE_AUTHRES = {501093, 501094, 501110};        // unused
-        final int[] CODE_DEAUTH = {501105, 501080, 501098,
-                501099, 501106, 501107, 501108, 501111};            // from and to
+        final int[] CODE_AUTHRES = {501093, 501094, 501110};
+        final int[] CODE_DEAUTH = {501105, 501080, 501098, 501099, 501106, 501107, 501108, 501111};
         final int[] CODE_ASSOCREQ = {501095, 501096, 501097};
-        final int[] CODE_ASSOCRES = {501100, 501101, 501112};       // unused
+        final int[] CODE_ASSOCRES = {501100, 501101, 501112};
         final int[] CODE_DISASSOCFROM = {501102, 501104, 501113};
-        final int[] CODE_USERAUTH = {522008, 522042, 522038};       // Successful and failed
-        final int[] CODE_USRSTATUS = {522005, 522006, 522026};      // User Entry added, deleted, and user miss
-        final int[] CODE_USERROAM = {500010};                       // unused
+        final int[] CODE_USERAUTH = {522008, 522042, 522038};
+        final int[] CODE_USRSTATUS = {522005, 522006, 522026};
+        final int[] CODE_USERROAM = {500010};
 
         // Generic patterns to extract message fields:
         // Datetime and year
@@ -37,7 +36,7 @@ public class LogProcessor {
         // WiFi AP info
         final String regApInfo =
                 "(?<apip>(\\d{1,3}\\.){3}\\d{1,3})-(?<apmac>([0-9a-f]{2}:){5}[0-9a-f]{2})-(?<apname>[\\w-]+)";
-
+        
         /**
          * Message-specific filters.
          * NOTE:
@@ -69,8 +68,8 @@ public class LogProcessor {
                 "%s(.*)\\s+username=(?<username>[^\\s]+)\\s+MAC=%s\\s+IP=(?<userip>(\\d{1,3}\\.){3}\\d{1,3})(.+)(AP=(?<apname>[^\\s]+))?",
                 regPrefix, regUserMac), Pattern.CASE_INSENSITIVE);
         final Pattern REG_USRSTATUS = Pattern.compile(String.format(
-                        "%s(.*)MAC=%s\\s+IP=(?<userip>(111\\.\\d+|10\\.18[4-8])(\\.\\d+){2})", regPrefix, regUserMac),
-                Pattern.CASE_INSENSITIVE);
+                        "%s(.*)MAC=%s\\s+IP=(?<userip>(111\\.\\d+|10\\.18[4-8])(\\.\\d+){2})",
+                        regPrefix, regUserMac), Pattern.CASE_INSENSITIVE);
 
         // remove invalid messages
         String[] chops = new String[0];

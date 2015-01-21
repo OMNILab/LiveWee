@@ -1,9 +1,10 @@
 package cn.edu.sjtu.omnilab.livewee.test;
 
-import java.io.IOException;
+import java.io.*;
 import java.util.Properties;
 
 import cn.edu.sjtu.omnilab.livewee.logproducer.ConfLoader;
+import cn.edu.sjtu.omnilab.livewee.logproducer.LogProcessor;
 import kafka.javaapi.producer.Producer;
 import kafka.producer.ProducerConfig;
 import org.junit.Assert;
@@ -26,5 +27,17 @@ public class TestProducer {
 
         Producer<Integer, String> producer =
                 new Producer<Integer, String>(new ProducerConfig(props));
+    }
+    
+    @Test
+    public void testLogCleanse() throws IOException {
+        ClassLoader classLoader = getClass().getClassLoader();
+        FileReader ifile = new FileReader(classLoader.getResource("syslog.txt").getFile());
+        BufferedReader reader = new BufferedReader(ifile);
+
+        String line = null;
+        while ((line = reader.readLine()) != null) {
+            LogProcessor.cleanse(line);
+        }
     }
 }
