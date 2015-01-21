@@ -27,15 +27,16 @@ public class LogProcessor {
         final int[] CODE_USERROAM = {500010};
 
         // Generic patterns to extract message fields:
+        // MAC address
+        final String regMAC = "([0-9a-f]{2}:){5}[0-9a-f]{2}";
+        // IP address
+        final String regIP = "(\\d{1,3}\\.){3}\\d{1,3}";
         // Datetime and year
-        final String regPrefix =
-                "(?<time>\\w+\\s+\\d+\\s+(\\d{1,2}:){2}\\d{1,2}\\s+\\d{4})";
+        final String regPrefix = "(?<time>\\w+\\s+\\d+\\s+(\\d{1,2}:){2}\\d{1,2}\\s+\\d{4})";
         // User MAC address
-        final String regUserMac =
-                "(?<usermac>([0-9a-f]{2}:){5}[0-9a-f]{2})";
+        final String regUserMac = String.format("(?<umac>%s)", regMAC);
         // WiFi AP info
-        final String regApInfo =
-                "(?<apip>(\\d{1,3}\\.){3}\\d{1,3})-(?<apmac>([0-9a-f]{2}:){5}[0-9a-f]{2})-(?<apname>[\\w-]+)";
+        final String regApInfo = String.format("(?<apip>%s)-(?<apmac>%s)-(?<apname>[\\w-]+)", regIP, regMAC);
         
         /**
          * Message-specific filters.
@@ -65,10 +66,10 @@ public class LogProcessor {
                 "%s(.*)Disassoc(.*):\\s+%s:?\\s+AP\\s+%s",
                 regPrefix, regUserMac, regApInfo), Pattern.CASE_INSENSITIVE);
         final Pattern REG_USERAUTH = Pattern.compile(String.format(
-                "%s(.*)\\s+username=(?<username>[^\\s]+)\\s+MAC=%s\\s+IP=(?<userip>(\\d{1,3}\\.){3}\\d{1,3})(.+)(AP=(?<apname>[^\\s]+))?",
-                regPrefix, regUserMac), Pattern.CASE_INSENSITIVE);
+                "%s(.*)\\s+username=(?<uname>[^\\s]+)\\s+MAC=%s\\s+IP=(?<uip>%s)(.+)(AP=(?<apname>[^\\s]+))?",
+                regPrefix, regUserMac, regIP), Pattern.CASE_INSENSITIVE);
         final Pattern REG_USRSTATUS = Pattern.compile(String.format(
-                        "%s(.*)MAC=%s\\s+IP=(?<userip>(111\\.\\d+|10\\.18[4-8])(\\.\\d+){2})",
+                        "%s(.*)MAC=%s\\s+IP=(?<uip>(111\\.\\d+|10\\.18[4-8])(\\.\\d+){2})",
                         regPrefix, regUserMac), Pattern.CASE_INSENSITIVE);
 
         // remove invalid messages
@@ -93,14 +94,15 @@ public class LogProcessor {
         if (hasCodes(messageCode, CODE_AUTHREQ)) { // Auth request
             Matcher matcher = REG_AUTHREQ.matcher(message);
             if (matcher.find()) {
-                String usermac = matcher.group("usermac").replaceAll(":", "");
+                String usermac = matcher.group("umac").replaceAll(":", "");
                 String time = formatTime(matcher.group("time"));
-                filteredMessage = String.format("%s\t%s\t%s\t%s\n", usermac, time, "AuthRequest", matcher.group("apname"));
+                filteredMessage = String.format("%s\t%s\t%s\t%s\n",
+                        usermac, time, "AuthRequest", matcher.group("apname"));
             }
         } else if (hasCodes(messageCode, CODE_DEAUTH)) { // Deauth from and to
             Matcher matcher = REG_DEAUTH.matcher(message);
             if (matcher.find()) {
-                String usermac = matcher.group("usermac").replaceAll(":", "");
+                String usermac = matcher.group("umac").replaceAll(":", "");
                 String time = formatTime(matcher.group("time"));
                 filteredMessage = String.format("%s\t%s\t%s\t%s\n",
                         usermac, time, "Deauth", matcher.group("apname"));
@@ -108,7 +110,7 @@ public class LogProcessor {
         } else if (hasCodes(messageCode, CODE_ASSOCREQ)) { // Association request
             Matcher matcher = REG_ASSOCREQ.matcher(message);
             if (matcher.find()) {
-                String usermac = matcher.group("usermac").replaceAll(":", "");
+                String usermac = matcher.group("umac").replaceAll(":", "");
                 String time = formatTime(matcher.group("time"));
                 filteredMessage = String.format("%s\t%s\t%s\t%s\n",
                         usermac, time, "AssocRequest", matcher.group("apname"));
@@ -116,7 +118,7 @@ public class LogProcessor {
         } else if (hasCodes(messageCode, CODE_DISASSOCFROM)) { // Disassociation
             Matcher matcher = REG_DISASSOCFROM.matcher(message);
             if (matcher.find()) {
-                String usermac = matcher.group("usermac").replaceAll(":", "");
+                String usermac = matcher.group("umac").replaceAll(":", "");
                 String time = formatTime(matcher.group("time"));
                 filteredMessage = String.format("%s\t%s\t%s\t%s\n",
                         usermac, time, "Disassoc", matcher.group("apname"));
@@ -124,17 +126,17 @@ public class LogProcessor {
         } else if (hasCodes(messageCode, CODE_USERAUTH)) {  //username information, User authentication
             Matcher matcher = REG_USERAUTH.matcher(message);
             if (matcher.find()) {
-                String usermac = matcher.group("usermac").replaceAll(":", "");
+                String usermac = matcher.group("umac").replaceAll(":", "");
                 String time = formatTime(matcher.group("time"));
                 // apname is null if it is not there
                 filteredMessage = String.format("%s\t%s\t%s\t%s\t%s\t%s\n",
                         usermac, time, "UserAuth", matcher.group("apname"),
-                        matcher.group("username"), matcher.group("userip"));
+                        matcher.group("uname"), matcher.group("uip"));
             }
         } else if (hasCodes(messageCode, CODE_USRSTATUS)) { // User entry update status
             Matcher matcher = REG_USRSTATUS.matcher(message);
             if (matcher.find()) {
-                String usermac = matcher.group("usermac").replaceAll(":", "");
+                String usermac = matcher.group("umac").replaceAll(":", "");
                 String time = formatTime(matcher.group("time"));
                 String iPInfo = "IPAllocation";    // IP bond
                 if (messageCode == 522005) {
@@ -144,7 +146,7 @@ public class LogProcessor {
                  * the first allocation of specific IP and its recycling action.
                  */
                 filteredMessage = String.format("%s\t%s\t%s\t%s\n",
-                        usermac, time, iPInfo, matcher.group("userip"));
+                        usermac, time, iPInfo, matcher.group("uip"));
             }
         }
 
