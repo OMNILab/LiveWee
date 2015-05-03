@@ -8,6 +8,27 @@ import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * Cleanse and format Aruba Wifi logs by filtering out unwanted log numbers.
+ *
+ * Input:
+ * Raw or original Aruba syslog files.
+ *
+ * Output:
+ * 6c71d96d8c4d	2013-10-11 23:50:53	AuthRequest	XXY-3F-09
+ * 6c71d96d8c4d	2013-10-11 23:50:53	AssocRequest	XXY-3F-09
+ *
+ * Message encoding:
+ * - AuthRequest    0
+ * - Deauth         1
+ * - AssocRequest   2
+ * - Disassoc       3
+ * - UserAuth       4
+ * - IPAllocation   5
+ * - IPRecycle      6
+ *
+ * @Author chenxm
+ */
 public class LogProcessor {
 
     private static final Logger logger =
@@ -96,32 +117,32 @@ public class LogProcessor {
             if (matcher.find()) {
                 String usermac = matcher.group("umac").replaceAll(":", "");
                 String time = formatTime(matcher.group("time"));
-                filteredMessage = String.format("%s\t%s\t%s\t%s\n",
-                        usermac, time, "AuthRequest", matcher.group("apname"));
+                filteredMessage = String.format("%s,%s,%s,%s",
+                        usermac, time, "0", matcher.group("apname"));
             }
         } else if (hasCodes(messageCode, CODE_DEAUTH)) { // Deauth from and to
             Matcher matcher = REG_DEAUTH.matcher(message);
             if (matcher.find()) {
                 String usermac = matcher.group("umac").replaceAll(":", "");
                 String time = formatTime(matcher.group("time"));
-                filteredMessage = String.format("%s\t%s\t%s\t%s\n",
-                        usermac, time, "Deauth", matcher.group("apname"));
+                filteredMessage = String.format("%s,%s,%s,%s",
+                        usermac, time, "1", matcher.group("apname"));
             }
         } else if (hasCodes(messageCode, CODE_ASSOCREQ)) { // Association request
             Matcher matcher = REG_ASSOCREQ.matcher(message);
             if (matcher.find()) {
                 String usermac = matcher.group("umac").replaceAll(":", "");
                 String time = formatTime(matcher.group("time"));
-                filteredMessage = String.format("%s\t%s\t%s\t%s\n",
-                        usermac, time, "AssocRequest", matcher.group("apname"));
+                filteredMessage = String.format("%s,%s,%s,%s",
+                        usermac, time, "2", matcher.group("apname"));
             }
         } else if (hasCodes(messageCode, CODE_DISASSOCFROM)) { // Disassociation
             Matcher matcher = REG_DISASSOCFROM.matcher(message);
             if (matcher.find()) {
                 String usermac = matcher.group("umac").replaceAll(":", "");
                 String time = formatTime(matcher.group("time"));
-                filteredMessage = String.format("%s\t%s\t%s\t%s\n",
-                        usermac, time, "Disassoc", matcher.group("apname"));
+                filteredMessage = String.format("%s,%s,%s,%s",
+                        usermac, time, "3", matcher.group("apname"));
             }
         } else if (hasCodes(messageCode, CODE_USERAUTH)) {  //username information, User authentication
             Matcher matcher = REG_USERAUTH.matcher(message);
@@ -129,8 +150,8 @@ public class LogProcessor {
                 String usermac = matcher.group("umac").replaceAll(":", "");
                 String time = formatTime(matcher.group("time"));
                 // apname is null if it is not there
-                filteredMessage = String.format("%s\t%s\t%s\t%s\t%s\t%s\n",
-                        usermac, time, "UserAuth", matcher.group("apname"),
+                filteredMessage = String.format("%s,%s,%s,%s,%s,%s",
+                        usermac, time, "4", matcher.group("apname"),
                         matcher.group("uname"), matcher.group("uip"));
             }
         } else if (hasCodes(messageCode, CODE_USRSTATUS)) { // User entry update status
@@ -138,14 +159,14 @@ public class LogProcessor {
             if (matcher.find()) {
                 String usermac = matcher.group("umac").replaceAll(":", "");
                 String time = formatTime(matcher.group("time"));
-                String iPInfo = "IPAllocation";    // IP bond
+                String iPInfo = "5";    // IP bond
                 if (messageCode == 522005) {
-                    iPInfo = "IPRecycle";
+                    iPInfo = "6";
                 }
                 /* From the output, we see multiple IPAllocation message between
                  * the first allocation of specific IP and its recycling action.
                  */
-                filteredMessage = String.format("%s\t%s\t%s\t%s\n",
+                filteredMessage = String.format("%s,%s,%s,%s",
                         usermac, time, iPInfo, matcher.group("uip"));
             }
         }
