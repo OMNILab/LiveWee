@@ -42,7 +42,7 @@ wget https://$url/$version/$release.tgz.md5
 wget https://$url/$version/$release.tgz.sha1
 wget https://$url/$version/$release.tgz.sha2
 wget https://$url/$version/$release.tgz.asc
-tar -xvf $release.tgz
 /vagrant/vagrant/verify.sh $release.tgz
+tar -xvf $release.tgz
 ln -s /opt/apache/$release kafka
 exitscript
