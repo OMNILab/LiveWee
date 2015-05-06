@@ -40,6 +40,8 @@ apt-get -y install oracle-java6-installer oracle-java6-set-default
 /vagrant/vagrant/kafka.sh #install kafka
 /vagrant/vagrant/kafkacat.sh #install the kafkacat utility
 
-/opt/apache/kafka/bin/zookeeper-server-start.sh /opt/apache/kafka/config/zookeeper.properties 1>> /tmp/zk.log 2>> /tmp/zk.log &
+cmd=/opt/apache/kafka/bin/zookeeper-server-start.sh
+config=/opt/apache/kafka/config/zookeeper.properties
+$cmd $config 1>> /tmp/zk.log 2>> /tmp/zk.log &
 
 exitscript

@@ -50,6 +50,8 @@ sed 's/#advertised.host.name=<hostname routable by clients>/'advertised.host.nam
 sed 's/#host.name=localhost/'host.name=$IP'/' /tmp/prop2.tmp > /tmp/prop3.tmp
 sed 's/zookeeper.connect=localhost:2181/'zookeeper.connect=192.168.86.5:2181'/' /tmp/prop3.tmp > /opt/server.properties
 
-/opt/apache/kafka/bin/kafka-server-start.sh /opt/server.properties 1>> /tmp/broker.log 2>> /tmp/broker.log &
+cmd=/opt/apache/kafka/bin/kafka-server-start.sh
+config=/opt/server.properties
+$cmd $config 1>> /tmp/broker.log 2>> /tmp/broker.log &
 
 exitscript
