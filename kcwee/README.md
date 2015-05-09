@@ -11,6 +11,8 @@ Compile the project:
 
     $ sbt assembly
 
+Start redis server at localhost:6379.
+
 Run the program: sniffing messages from Kafka server and store to Redis db
 
     $ java -cp kcwee-assembly-1.0.jar cn.edu.sjtu.omnilab.livewee.kc.MobilityInspector
