@@ -60,7 +60,7 @@ class Heatmap(redis: RedisClient) {
     val snapshot = ("time" -> time) ~ ("heatmap" -> statJSON)
 
     val jsonstr = compact(render(snapshot))
-    println(jsonstr)
+    // println(jsonstr)
     redis.lpush(RedisUtils.heatmapStatusHistory, jsonstr)
   }
 
