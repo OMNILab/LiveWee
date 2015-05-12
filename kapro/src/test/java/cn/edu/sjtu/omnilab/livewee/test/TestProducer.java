@@ -4,7 +4,7 @@ import java.io.*;
 import java.util.Properties;
 
 import cn.edu.sjtu.omnilab.livewee.logproducer.ConfLoader;
-import cn.edu.sjtu.omnilab.livewee.logproducer.LogProcessor;
+import cn.edu.sjtu.omnilab.livewee.logproducer.WifilogFilter;
 import kafka.javaapi.producer.Producer;
 import kafka.producer.ProducerConfig;
 import org.junit.Assert;
@@ -37,7 +37,7 @@ public class TestProducer {
 
         String line = null;
         while ((line = reader.readLine()) != null) {
-            LogProcessor.cleanse(line);
+            WifilogFilter.cleanse(line);
         }
     }
 }

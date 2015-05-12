@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>cn.edu.sjtu.omnilab</groupId>
-    <artifactId>syslog-producer</artifactId>
+    <artifactId>kapro</artifactId>
     <version>1.0.1</version>
 
     <dependencies>

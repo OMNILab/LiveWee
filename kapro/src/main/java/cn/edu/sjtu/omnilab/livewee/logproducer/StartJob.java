@@ -63,7 +63,7 @@ public class StartJob {
             String msg = new String(packet.getData(), 0, packet.getLength());
             producer.sendMessage(msg);
 
-            String messageETL = LogProcessor.cleanse(msg);
+            String messageETL = WifilogFilter.cleanse(msg);
             if (messageETL != null) {
                 producerETL.sendMessage(messageETL);
             }
