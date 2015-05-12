@@ -1,8 +1,6 @@
-package cn.edu.sjtu.omnilab.livewee.logproducer;
+package cn.edu.sjtu.omnilab.livewee.kapro;
 
 import java.io.*;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -28,7 +26,7 @@ import java.util.regex.Pattern;
  * Local5: 1001 111.186.0.1/20, New: 10.184.0.0/16
  *
  * @Author chenxm
- * @Version 2.0
+ * @Version 2.1
  */
 
 /**
@@ -43,6 +41,11 @@ class WIFICode {
     public static final int UserAuth = 4;
     public static final int IPAllocation = 5;
     public static final int IPRecycle = 6;
+    public static final int UserRoaming = 7;
+    public static final int UnencDataFrame = 8;
+    public static final int RogueAPDetected = 9;
+    public static final int StationNewUp = 10;
+    public static final int StationDepart = 11;
 }
 
 interface PatternExt {
@@ -63,15 +66,17 @@ public class WifilogFilter {
     final static int[] CODE_USERAUTH = {522008, 522042, 522038};
     final static int[] CODE_IPSTATUS = {522005, 522006, 522026};
     final static int[] CODE_USERROAM = {500010};
-    final static int[] CODE_UNENCFRM = {127065};
+    final static int[] CODE_UNENCDF = {127065};
     final static int[] CODE_ROGUEAP = {127037};
-    final static int[] CODE_STATRPT = {522035, 522036};
+    final static int[] CODE_STAUPDN = {522035, 522036};
 
     /**
      * Generic patterns to extract message fields:
      */
-    final static String PREFIX = "(\\w+\\s+\\d+\\s+(?:\\d{1,2}:){2}\\d{1,2}\\s+\\d{4})";
-    final static String USRMAC = "((?:[0-9a-f]{2}:){5}[0-9a-f]{2})";
+    final static String TIMPRE = "\\w+\\s+\\d+\\s+(?:\\d{1,2}:){2}\\d{1,2}\\s+\\d{4}";
+    final static String USRMAC = "(?:[0-9a-f]{2}:){5}[0-9a-f]{2}";
+    final static String IPADDR = "(?:\\d{1,3}\\.){3}\\d{1,3}";
+    final static String APNAME = "[\\w-]+";
     final static String APINFO = "((?:\\d{1,3}\\.){3}\\d{1,3})-((?:[0-9a-f]{2}:){5}[0-9a-f]{2})-([\\w-]+)";
 
     /**
@@ -79,8 +84,8 @@ public class WifilogFilter {
      * groups (starting with 1): time, usename, apip, apmac, apname
      */
     final static Pattern AUTHREQ = Pattern.compile(String.format(
-            "%s(?:.*)Auth\\s+request:\\s+%s:?\\s+(?:.*)AP\\s+%s",
-            PREFIX, USRMAC, APINFO), Pattern.CASE_INSENSITIVE);
+            "(%s)(?:.*)auth\\s+request:\\s+(%s):?\\s+(?:.*)AP\\s+%s",
+            TIMPRE, USRMAC, APINFO), Pattern.CASE_INSENSITIVE);
     final static PatternExt PE_AUTHREQ = new PatternExt() {
         @Override
         public String parse(String message) {
@@ -100,15 +105,15 @@ public class WifilogFilter {
      * Authentication responses
      */
     final static Pattern AUTHRES = Pattern.compile(String.format(
-            "%s(?:.*)Auth\\s+(success|failure):\\s+%s:?\\s+AP\\s+%s",
-            PREFIX, USRMAC, APINFO), Pattern.CASE_INSENSITIVE);
+            "(%s)(?:.*)auth\\s+(success|failure):\\s+(%s):?\\s+AP\\s+%s",
+            TIMPRE, USRMAC, APINFO), Pattern.CASE_INSENSITIVE);
 
     /**
      * Deauthentication
      */
     final static Pattern DEAUTH = Pattern.compile(String.format(
-            "%s(?:.*)Deauth(?:.*):\\s+%s:?\\s+(?:.*)AP\\s+%s",
-            PREFIX, USRMAC, APINFO), Pattern.CASE_INSENSITIVE);
+            "(%s)(?:.*)deauth(?:.*):\\s+(%s):?\\s+(?:.*)AP\\s+%s",
+            TIMPRE, USRMAC, APINFO), Pattern.CASE_INSENSITIVE);
     final static PatternExt PE_DEAUTH = new PatternExt() {
         @Override
         public String parse(String message) {
@@ -128,8 +133,8 @@ public class WifilogFilter {
      * Association requests
      */
     final static Pattern ASSOCREQ = Pattern.compile(String.format(
-            "%s(?:.*)Assoc(?:.*):\\s+%s(?:.*):?\\s+(?:.*)AP\\s+%s",
-            PREFIX, USRMAC, APINFO), Pattern.CASE_INSENSITIVE);
+            "(%s)(?:.*)assoc(?:.*):\\s+(%s)(?:.*):?\\s+(?:.*)AP\\s+%s",
+            TIMPRE, USRMAC, APINFO), Pattern.CASE_INSENSITIVE);
     final static PatternExt PE_ASSOCREQ = new PatternExt() {
         @Override
         public String parse(String message) {
@@ -149,8 +154,8 @@ public class WifilogFilter {
      * Disassociation
      */
     final static Pattern DISASSOC = Pattern.compile(String.format(
-            "%s(?:.*)Disassoc(?:.*):\\s+%s:?\\s+AP\\s+%s",
-            PREFIX, USRMAC, APINFO), Pattern.CASE_INSENSITIVE);
+            "(%s)(?:.*)disassoc(?:.*):\\s+(%s):?\\s+AP\\s+%s",
+            TIMPRE, USRMAC, APINFO), Pattern.CASE_INSENSITIVE);
     final static PatternExt PE_DISASSOC = new PatternExt() {
         @Override
         public String parse(String message) {
@@ -171,8 +176,8 @@ public class WifilogFilter {
      * groups (starting with 1): time, usename, usermac, userip, apname
      */
     final static Pattern USERAUTH = Pattern.compile(String.format(
-            "%s(?:.*)\\s+username=([^\\s]+)\\s+MAC=%s\\s+IP=((?:\\d{1,3}\\.){3}\\d{1,3})(?:.+)(?:AP=([^\\s]+))?",
-            PREFIX, USRMAC), Pattern.CASE_INSENSITIVE);
+            "(%s)(?:.*)\\s+username=([^\\s]+)\\s+MAC=(%s)\\s+IP=(%s)(?:.+)(?:AP=(%s))?",
+            TIMPRE, USRMAC, IPADDR, APNAME), Pattern.CASE_INSENSITIVE);
     final static PatternExt PE_USERAUTH = new PatternExt() {
         @Override
         public String parse(String message) {
@@ -199,9 +204,9 @@ public class WifilogFilter {
      * L3 layer status
      * groups (starting with 1): time, usermac, userip
      */
-    final static Pattern IPSTATUS = Pattern.compile(
-            String.format("%s(?:.*)MAC=%s\\s+IP=((?:111\\.\\d+|10\\.18[4-8])(?:\\.\\d+){2})",
-            PREFIX, USRMAC), Pattern.CASE_INSENSITIVE);
+    final static Pattern IPSTATUS = Pattern.compile(String.format(
+            "(%s)(?:.*)MAC=(%s)\\s+IP=((?:111\\.\\d+|10\\.18[4-8])(?:\\.\\d+){2})",
+            TIMPRE, USRMAC), Pattern.CASE_INSENSITIVE);
     final static PatternExt PE_IPSTATUS = new PatternExt() {
         @Override
         public String parse(String message) {
@@ -220,6 +225,94 @@ public class WifilogFilter {
                  * the first allocation of specific IP and its recycling action.
                  */
                 formatted = String.format("%s,%s,%s,%s", usermac, time, action, userip);
+            }
+            return formatted;
+        }
+    };
+
+    /**
+     * Roaming actions
+     */
+    final static Pattern USRROAM = Pattern.compile(String.format(
+            "(%s)(?:.*)station\\s+(%s),(?:.*)AP\\s+(%s)",
+            TIMPRE, USRMAC, APNAME), Pattern.CASE_INSENSITIVE);
+    final static PatternExt PE_USRROAM = new PatternExt() {
+        @Override
+        public String parse(String message) {
+            String formatted = null;
+            Matcher matcher = USRROAM.matcher(message);
+            if (matcher.find()) {
+                String time = formatTrans(matcher.group(1));
+                String usermac = matcher.group(2).replaceAll(":", "");
+                String apname = matcher.group(3);
+                formatted = String.format("%s,%s,%s,%s", usermac, time, WIFICode.UserRoaming, apname);
+            }
+            return formatted;
+        }
+    };
+
+    /**
+     * Unencrypted data frame alert
+     */
+    final static Pattern UNENCDF = Pattern.compile(String.format(
+            "(%s)(?:.*)\\|AP\\s+(%s)(?:[^\\|]*\\|)(?:.*)a valid client \\((%s)\\)",
+            TIMPRE, APNAME, USRMAC), Pattern.CASE_INSENSITIVE);
+    final static PatternExt PE_UNENCDF = new PatternExt() {
+        @Override
+        public String parse(String message) {
+            String formatted = null;
+            Matcher matcher = UNENCDF.matcher(message);
+            if (matcher.find()) {
+                String time = formatTrans(matcher.group(1));
+                String apname = matcher.group(2);
+                String usermac = matcher.group(3).replaceAll(":", "");
+                formatted = String.format("%s,%s,%s,%s", usermac, time, WIFICode.UnencDataFrame, apname);
+            }
+            return formatted;
+        }
+    };
+
+    /**
+     * Detected a client associated with a Rogue access point.
+     */
+    final static Pattern ROGUEAP = Pattern.compile(String.format(
+            "(%s)(?:.*)\\|AP\\s+(%s)(?:[^\\|]*\\|)(?:.*)detected a client (%s)",
+            TIMPRE, APNAME, USRMAC), Pattern.CASE_INSENSITIVE);
+    final static PatternExt PE_ROGUEAP = new PatternExt() {
+        @Override
+        public String parse(String message) {
+            String formatted = null;
+            Matcher matcher = ROGUEAP.matcher(message);
+            if (matcher.find()) {
+                String time = formatTrans(matcher.group(1));
+                String apname = matcher.group(2);
+                String usermac = matcher.group(3).replaceAll(":", "");
+                formatted = String.format("%s,%s,%s,%s", usermac, time, WIFICode.RogueAPDetected, apname);
+            }
+            return formatted;
+        }
+    };
+
+    /**
+     * System detected a new wireless station or departure of a wireless station.
+     */
+    final static Pattern STAUPDN = Pattern.compile(String.format(
+            "(%s)(?:.*)MAC=(%s) station (up|dn)(?:.*)AP-name=(%s)",
+            TIMPRE, USRMAC, APNAME), Pattern.CASE_INSENSITIVE);
+    final static PatternExt PE_STAUPDN = new PatternExt() {
+        @Override
+        public String parse(String message) {
+            String formatted = null;
+            Matcher matcher = STAUPDN.matcher(message);
+            if (matcher.find()) {
+                String time = formatTrans(matcher.group(1));
+                String usermac = matcher.group(2).replaceAll(":", "");
+                String status = matcher.group(3);
+                String apname = matcher.group(4);
+                int code = WIFICode.StationNewUp;
+                if ( status == "dn" )
+                    code = WIFICode.StationDepart;
+                formatted = String.format("%s,%s,%s,%s", usermac, time, code, apname);
             }
             return formatted;
         }
@@ -313,7 +406,7 @@ public class WifilogFilter {
         String cleanLog = null;
 
         int code = extractMsgCode(message);
-        if (code == WIFICode.Invalid || code / 100000 != 1 || code / 100000 != 5)
+        if (code == WIFICode.Invalid || (code/100000 != 1 && code/100000 != 5))
             return cleanLog;
 
         if (hasCodes(code, CODE_AUTHREQ)) {
@@ -328,6 +421,14 @@ public class WifilogFilter {
             cleanLog = PE_USERAUTH.parse(message);
         } else if (hasCodes(code, CODE_IPSTATUS)) {
             cleanLog = PE_IPSTATUS.parse(message);
+        } else if (hasCodes(code, CODE_USERROAM)) {
+            cleanLog = PE_USRROAM.parse(message);
+        } else if (hasCodes(code, CODE_UNENCDF)) {
+            cleanLog = PE_UNENCDF.parse(message);
+        } else if (hasCodes(code, CODE_ROGUEAP)) {
+            cleanLog = PE_ROGUEAP.parse(message);
+        } else if (hasCodes(code, CODE_STAUPDN)) {
+            cleanLog = PE_STAUPDN.parse(message);
         }
 
         return cleanLog;

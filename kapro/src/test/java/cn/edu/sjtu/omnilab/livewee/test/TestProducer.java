@@ -3,8 +3,8 @@ package cn.edu.sjtu.omnilab.livewee.test;
 import java.io.*;
 import java.util.Properties;
 
-import cn.edu.sjtu.omnilab.livewee.logproducer.ConfLoader;
-import cn.edu.sjtu.omnilab.livewee.logproducer.WifilogFilter;
+import cn.edu.sjtu.omnilab.livewee.kapro.ConfLoader;
+import cn.edu.sjtu.omnilab.livewee.kapro.WifilogFilter;
 import kafka.javaapi.producer.Producer;
 import kafka.producer.ProducerConfig;
 import org.junit.Assert;
@@ -20,7 +20,7 @@ public class TestProducer {
 
     @Test
     public void testProducerCreation() {
-        String topic = "arubasyslog";
+        String topic = "test";
         Properties props = new Properties();
         props.put("metadata.broker.list", "10.50.4.73:9092");
         props.put("serializer.class", "kafka.serializer.StringEncoder");
@@ -37,7 +37,9 @@ public class TestProducer {
 
         String line = null;
         while ((line = reader.readLine()) != null) {
-            WifilogFilter.cleanse(line);
+            String clean = WifilogFilter.cleanse(line);
+            if (clean != null)
+                System.out.println(clean);
         }
     }
 }

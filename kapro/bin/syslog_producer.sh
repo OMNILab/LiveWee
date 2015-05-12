@@ -13,9 +13,9 @@ else
 fi
 
 # Add multiple java class paths
-for file in $base_dir/target/syslog-producer-$VERSION*.jar;
+for file in $base_dir/target/kapro-$VERSION*.jar;
 do
     CLASSPATH=$CLASSPATH:$file
 done 
 
-exec $JAVA -cp $CLASSPATH cn.edu.sjtu.omnilab.livewee.logproducer.StartJob $@
+exec $JAVA -cp $CLASSPATH cn.edu.sjtu.omnilab.livewee.kapro.StartJob $@

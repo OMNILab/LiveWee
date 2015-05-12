@@ -1,4 +1,4 @@
-package cn.edu.sjtu.omnilab.livewee.logproducer;
+package cn.edu.sjtu.omnilab.livewee.kapro;
 
 /**
  * Global constants used by classes.

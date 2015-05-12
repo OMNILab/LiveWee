@@ -1,4 +1,4 @@
-package cn.edu.sjtu.omnilab.livewee.logproducer;
+package cn.edu.sjtu.omnilab.livewee.kapro;
 
 import org.apache.commons.cli.*;
 import org.apache.logging.log4j.LogManager;
@@ -18,7 +18,7 @@ public class StartJob {
         // Params for UDP port, brokers, topic
         Options options = new Options();
         options.addOption("h", "help", false, "print this message");
-        options.addOption("p", "port", true, "UDP port of source message");
+        options.addOption("p", "port", true, "local UDP port of source message");
         options.addOption("b", "brokers", true,
                 "broker servers separated by commas");
         options.addOption("t", "topic", true, "name of Kafka topic " +
@@ -48,10 +48,10 @@ public class StartJob {
         ConfLoader confETL = new ConfLoader(conf);
         confETL.topic += ".etled";
         DefaultProducer producerETL = new DefaultProducer(confETL);
-        
+
         logger.info("Listening UDP " + conf.UDPPort);
         logger.info("Sending messages to " + conf.brokers);
-        
+
         // Read messages from UDP port
         DatagramSocket socket = new DatagramSocket(conf.UDPPort);
         DatagramPacket packet = new DatagramPacket(

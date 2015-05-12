@@ -1,4 +1,4 @@
-package cn.edu.sjtu.omnilab.livewee.logproducer;
+package cn.edu.sjtu.omnilab.livewee.kapro;
 
 import java.io.IOException;
 import java.net.URL;
