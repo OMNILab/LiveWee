@@ -15,6 +15,7 @@ class Heatmap(redis: RedisClient) {
 
   final val UPDATE_FRQ = 2
   final val WINDOW_LEN = 60
+  final val MAX_TIME_SHIFT = 10 * 60 // ten minutes
   var lastUpdate = System.currentTimeMillis() / 1000
 
   case class LocationInfo(location: String, lat: String, lon: String)
@@ -27,7 +28,7 @@ class Heatmap(redis: RedisClient) {
   def update(r: ManPoint): Unit = {
     val systime = System.currentTimeMillis() / 1000
 
-    if (r != null) {
+    if (r != null && systime - r.time <= MAX_TIME_SHIFT) {
       // add user record
       val key = LocationInfo(r.location, r.lat, r.lon)
       if ( !hmap.contains(key) )
@@ -60,7 +61,6 @@ class Heatmap(redis: RedisClient) {
     val snapshot = ("time" -> time) ~ ("heatmap" -> statJSON)
 
     val jsonstr = compact(render(snapshot))
-    // println(jsonstr)
     redis.lpush(RedisUtils.heatmapStatusHistory, jsonstr)
   }
 

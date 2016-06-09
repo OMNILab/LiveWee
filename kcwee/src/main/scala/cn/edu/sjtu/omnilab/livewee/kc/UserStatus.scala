@@ -15,6 +15,7 @@ class UserStatus(mac: String, redis: RedisClient) {
   val SESSION_GAP = 5 * 60
   val SESSION_MAX = 3 * 3600
 
+  // inner data type to store location info.
   case class LocationRecord(systime: Long, stime: Long, duration: Long, ap: String, location: String) {
     def toJson(): String = {
       val detector = RedisUtils.APDetector.parse(ap)
@@ -36,7 +37,8 @@ class UserStatus(mac: String, redis: RedisClient) {
 
   /**
    * Add a new location point to user's session status.
-   * @param r
+   *
+   * @param r a new management record
    */
   def updateWithRecord(r: ManPoint): Unit = {
     val systime = System.currentTimeMillis() / 1000
@@ -65,8 +67,7 @@ class UserStatus(mac: String, redis: RedisClient) {
   def flushToRedis(): Unit = {
     if ( session != null ) {
       val jsonstr = session.toJson
-      // println("%s: %s".format(mac, jsonstr))
-
+      // include new session in user's history
       redis.lpush(RedisUtils.userStatusHistory(uid), jsonstr)
       session = null
     }
@@ -77,6 +78,7 @@ class UserStatus(mac: String, redis: RedisClient) {
    */
   def updateLiveStatus(): Unit = {
     val status = session.toJson
+    // set user's current status as detected location
     redis.hset(RedisUtils.userStatusLive, uid, status)
   }
 
